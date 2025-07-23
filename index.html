@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumChat - Real-time Chat System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS styles from previous implementation */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --dark: #1d3557;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --chat-bg: #121212;
+            --sidebar-bg: #1e1e1e;
+            --message-bg: #2d2d2d;
+            --message-own: #3a3a5a;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: var(--light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            height: 95vh;
+            background: rgba(30, 30, 46, 0.9);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: rgba(10, 10, 20, 0.95);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(to right, var(--primary), var(--success));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo i {
+            font-size: 2rem;
+            color: var(--primary);
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--danger);
+        }
+
+        .status-indicator.connected {
+            background: var(--success);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .search-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: white;
+            width: 100%;
+            outline: none;
+        }
+
+        .rooms-section {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-title h3 {
+            font-size: 1.1rem;
+            color: var(--gray);
+        }
+
+        .btn {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .room-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .room-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .room-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .room-item.active {
+            background: rgba(67, 97, 238, 0.2);
+            border-left: 4px solid var(--primary);
+        }
+
+        .room-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(45deg, var(--primary), var(--success));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .room-info {
+            flex: 1;
+        }
+
+        .room-info h4 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .room-info p {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        .room-stats {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-count {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        .unread-count {
+            background: var(--danger);
+            color: white;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--chat-bg);
+            position: relative;
+        }
+
+        .chat-header {
+            padding: 15px 25px;
+            background: rgba(10, 10, 20, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chat-header-info .room-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+        }
+
+        .chat-header-info h2 {
+            font-size: 1.4rem;
+        }
+
+        .chat-header-info p {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .chat-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 18px;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.own {
+            align-self: flex-end;
+            background: var(--message-own);
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.other {
+            align-self: flex-start;
+            background: var(--message-bg);
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .message-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin-right: 10px;
+        }
+
+        .message-sender {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .message-time {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: var(--gray);
+        }
+
+        .message-content {
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .message-content img {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .message-content.file {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .message-content.file i {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .file-size {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        .input-area {
+            padding: 20px;
+            background: rgba(10, 10, 20, 0.8);
+            display: flex;
+            gap: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-box {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            padding: 5px 20px;
+        }
+
+        .input-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 15px 0;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .input-box input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .input-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-action {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .input-action:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .send-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transform: translateX(200%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            border-left: 4px solid var(--primary);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .typing-indicator {
+            position: absolute;
+            bottom: 90px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .typing-indicator.show {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 280px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 40%;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .room-list {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+            
+            .room-item {
+                min-width: 250px;
+                margin-right: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-satellite-dish"></i>
+                <h1>QuantumChat</h1>
+            </div>
+            <div class="connection-status">
+                <div class="status-indicator" id="statusIndicator"></div>
+                <span id="statusText">Connecting...</span>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <div>
+                    <div id="userName">User1234</div>
+                    <div style="font-size: 0.8rem; color: var(--gray);">Online</div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search rooms...">
+                    </div>
+                </div>
+                
+                <div class="rooms-section">
+                    <div class="section-title">
+                        <h3>Active Rooms</h3>
+                        <button class="btn" id="createRoomBtn">
+                            <i class="fas fa-plus"></i> New Room
+                        </button>
+                    </div>
+                    
+                    <div class="room-list" id="roomList">
+                        <!-- Rooms will be populated here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-area">
+                <div class="chat-header">
+                    <div class="chat-header-info">
+                        <div class="room-icon" id="roomIcon">
+                            <i class="fas fa-hashtag"></i>
+                        </div>
+                        <div>
+                            <h2 id="roomName">Select a room</h2>
+                            <p id="roomDescription">Join a room to start chatting</p>
+                        </div>
+                    </div>
+                    <div class="chat-actions">
+                        <div class="action-btn">
+                            <i class="fas fa-user-friends"></i>
+                        </div>
+                        <div class="action-btn">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div class="action-btn">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="messages-container" id="messagesContainer">
+                    <!-- Messages will appear here -->
+                </div>
+                
+                <div class="typing-indicator" id="typingIndicator">
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                    <span id="typingText">Someone is typing...</span>
+                </div>
+                
+                <div class="input-area">
+                    <div class="input-box">
+                        <input type="text" id="messageInput" placeholder="Type a message...">
+                    </div>
+                    <div class="input-actions">
+                        <div class="input-action">
+                            <i class="fas fa-paperclip"></i>
+                        </div>
+                        <div class="input-action">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        <div class="input-action">
+                            <i class="fas fa-smile"></i>
+                        </div>
+                    </div>
+                    <div class="send-btn" id="sendBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification">
+        Notification message here
+    </div>
+
+    <script>
+        // DOM Elements
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+        const userAvatar = document.getElementById('userAvatar');
+        const userName = document.getElementById('userName');
+        const roomList = document.getElementById('roomList');
+        const roomIcon = document.getElementById('roomIcon');
+        const roomName = document.getElementById('roomName');
+        const roomDescription = document.getElementById('roomDescription');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const notification = document.getElementById('notification');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const typingText = document.getElementById('typingText');
+        const createRoomBtn = document.getElementById('createRoomBtn');
+
+        // State variables
+        let currentUser = 'User' + Math.floor(Math.random() * 1000);
+        let currentRoomId = null;
+        let isConnected = false;
+        let typingTimeout = null;
+        let isTyping = false;
+
+        // Sample rooms data
+        const sampleRooms = [
+            { 
+                id: 'general', 
+                name: 'General Discussion', 
+                description: 'Talk about anything and everything', 
+                icon: 'fas fa-comments',
+                users: 24,
+                unread: 0
+            },
+            { 
+                id: 'tech', 
+                name: 'Technology', 
+                description: 'Discuss the latest tech trends', 
+                icon: 'fas fa-laptop-code',
+                users: 18,
+                unread: 3
+            },
+            { 
+                id: 'gaming', 
+                name: 'Gaming', 
+                description: 'Share your gaming experiences', 
+                icon: 'fas fa-gamepad',
+                users: 32,
+                unread: 0
+            },
+            { 
+                id: 'music', 
+                name: 'Music Lovers', 
+                description: 'Discuss your favorite artists and songs', 
+                icon: 'fas fa-music',
+                users: 15,
+                unread: 7
+            },
+            { 
+                id: 'sports', 
+                name: 'Sports Talk', 
+                description: 'All about sports and athletes', 
+                icon: 'fas fa-football-ball',
+                users: 21,
+                unread: 0
+            }
+        ];
+
+        // Initialize the application
+        function init() {
+            // Set user info
+            userName.textContent = currentUser;
+            userAvatar.textContent = currentUser.charAt(0);
+            
+            // Render rooms
+            renderRooms();
+            
+            // Setup connection
+            connect();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Show welcome notification
+            showNotification(`Welcome to QuantumChat, ${currentUser}!`);
+        }
+
+        // Simulate connection
+        function connect() {
+            statusText.textContent = 'Connecting...';
+            statusIndicator.className = 'status-indicator';
+            
+            // Simulate connection delay
+            setTimeout(() => {
+                isConnected = true;
+                statusText.textContent = 'Connected';
+                statusIndicator.classList.add('connected');
+                showNotification('Successfully connected to QuantumChat network');
+            }, 1500);
+        }
+
+        // Render rooms in the sidebar
+        function renderRooms() {
+            roomList.innerHTML = '';
+            
+            sampleRooms.forEach(room => {
+                const roomElement = document.createElement('div');
+                roomElement.className = `room-item ${currentRoomId === room.id ? 'active' : ''}`;
+                roomElement.innerHTML = `
+                    <div class="room-icon">
+                        <i class="${room.icon}"></i>
+                    </div>
+                    <div class="room-info">
+                        <h4>${room.name}</h4>
+                        <p>${room.description}</p>
+                    </div>
+                    <div class="room-stats">
+                        <div class="user-count">${room.users}</div>
+                        ${room.unread > 0 ? `<div class="unread-count">${room.unread}</div>` : ''}
+                    </div>
+                `;
+                
+                roomElement.addEventListener('click', () => {
+                    joinRoom(room);
+                });
+                
+                roomList.appendChild(roomElement);
+            });
+        }
+
+        // Join a room
+        function joinRoom(room) {
+            if (currentRoomId === room.id) return;
+            
+            currentRoomId = room.id;
+            roomName.textContent = room.name;
+            roomDescription.textContent = room.description;
+            roomIcon.innerHTML = `<i class="${room.icon}"></i>`;
+            
+            // Clear messages and show loading
+            messagesContainer.innerHTML = '<div style="text-align:center; padding:20px; color:var(--gray);">Loading messages...</div>';
+            
+            // Simulate loading messages
+            setTimeout(() => {
+                renderMessages();
+            }, 800);
+            
+            renderRooms();
+            showNotification(`Joined room: ${room.name}`);
+        }
+
+        // Render messages for the current room
+        function renderMessages() {
+            messagesContainer.innerHTML = '';
+            
+            if (!currentRoomId) return;
+            
+            // Generate sample messages
+            const messages = generateSampleMessages();
+            
+            messages.forEach(msg => {
+                const messageElement = document.createElement('div');
+                messageElement.className = `message ${msg.sender === currentUser ? 'own' : 'other'}`;
+                messageElement.innerHTML = `
+                    <div class="message-header">
+                        <div class="message-avatar">${msg.sender.charAt(0)}</div>
+                        <div class="message-sender">${msg.sender}</div>
+                        <div class="message-time">${formatTime(msg.timestamp)}</div>
+                    </div>
+                    <div class="message-content">
+                        ${msg.type === 'file' ? `
+                            <div class="file">
+                                <i class="fas fa-file-pdf"></i>
+                                <div class="file-info">
+                                    <div class="file-name">${msg.fileName}</div>
+                                    <div class="file-size">${msg.fileSize}</div>
+                                </div>
+                                <i class="fas fa-download"></i>
+                            </div>
+                        ` : msg.type === 'image' ? `
+                            <img src="${msg.imageUrl}" alt="Shared image">
+                        ` : `
+                            ${msg.content}
+                        `}
+                    </div>
+                `;
+                messagesContainer.appendChild(messageElement);
+            });
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Generate sample messages for demonstration
+        function generateSampleMessages() {
+            const messages = [];
+            const users = ['Alex', 'Taylor', 'Jordan', 'Morgan', 'Casey', 'Riley', 'Quinn', 'Drew'];
+            const now = new Date();
+            
+            for (let i = 0; i < 15; i++) {
+                const isOwn = Math.random() > 0.7;
+                const sender = isOwn ? currentUser : users[Math.floor(Math.random() * users.length)];
+                const timestamp = new Date(now.getTime() - (15 - i) * 60000);
+                
+                // Randomly decide message type
+                const rand = Math.random();
+                let type = 'text';
+                let content = '';
+                let fileName = '';
+                let fileSize = '';
+                let imageUrl = '';
+                
+                if (rand < 0.1) {
+                    type = 'file';
+                    fileName = 'document.pdf';
+                    fileSize = '2.4 MB';
+                } else if (rand < 0.2) {
+                    type = 'image';
+                    imageUrl = `https://picsum.photos/seed/${i}/400/300`;
+                } else {
+                    content = getRandomMessage();
+                }
+                
+                messages.push({
+                    sender,
+                    content,
+                    timestamp,
+                    type,
+                    fileName,
+                    fileSize,
+                    imageUrl
+                });
+            }
+            
+            return messages;
+        }
+
+        // Get a random message
+        function getRandomMessage() {
+            const messages = [
+                "Hello everyone! How's it going?",
+                "Has anyone tried the new QuantumChat features?",
+                "I'm really enjoying this platform!",
+                "Does anyone know when the next update is coming?",
+                "Just joined the room - what's everyone talking about?",
+                "This is a great community!",
+                "I've been using this for a few weeks now and I love it",
+                "Can someone help me with a technical question?",
+                "Just sharing some resources I found useful",
+                "Anyone here from Europe?",
+                "The new UI is so much better!",
+                "How do you all organize your chat rooms?",
+                "I'm working on a project and could use some feedback",
+                "Has anyone seen the latest tech news?",
+                "Thanks for all the help everyone!",
+                "This room is always so active!",
+                "I just discovered this platform today - it's amazing!",
+                "What's your favorite feature of QuantumChat?",
+                "I'm thinking about starting my own room",
+                "Anyone interested in a gaming session later?"
+            ];
+            
+            return messages[Math.floor(Math.random() * messages.length)];
+        }
+
+        // Send a message
+        function sendMessage() {
+            const content = messageInput.value.trim();
+            if (!content || !currentRoomId || !isConnected) return;
+            
+            // Create message object
+            const message = {
+                sender: currentUser,
+                content: content,
+                timestamp: new Date(),
+                type: 'text'
+            };
+            
+            // Add to UI immediately
+            addMessageToUI(message);
+            
+            // Clear input
+            messageInput.value = '';
+            
+            // Simulate sending to server
+            showNotification('Message sent');
+        }
+
+        // Add message to UI
+        function addMessageToUI(message) {
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${message.sender === currentUser ? 'own' : 'other'}`;
+            messageElement.innerHTML = `
+                <div class="message-header">
+                    <div class="message-avatar">${message.sender.charAt(0)}</div>
+                    <div class="message-sender">${message.sender}</div>
+                    <div class="message-time">${formatTime(message.timestamp)}</div>
+                </div>
+                <div class="message-content">
+                    ${message.content}
+                </div>
+            `;
+            messagesContainer.appendChild(messageElement);
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Format time for messages
+        function formatTime(date) {
+            const d = new Date(date);
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Show notification
+        function showNotification(message) {
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Handle typing indicator
+        function handleTyping() {
+            if (!isConnected || !currentRoomId) return;
+            
+            // Clear previous timeout
+            if (typingTimeout) {
+                clearTimeout(typingTimeout);
+            }
+            
+            // Show typing indicator
+            if (!isTyping) {
+                isTyping = true;
+                typingText.textContent = `${currentUser} is typing...`;
+                typingIndicator.classList.add('show');
+            }
+            
+            // Hide after delay
+            typingTimeout = setTimeout(() => {
+                isTyping = false;
+                typingIndicator.classList.remove('show');
+            }, 2000);
+        }
+
+        // Create a new room
+        function createRoom() {
+            const roomName = prompt('Enter room name:');
+            if (!roomName) return;
+            
+            const newRoom = {
+                id: roomName.toLowerCase().replace(/\s+/g, '-'),
+                name: roomName,
+                description: 'A new chat room',
+                icon: 'fas fa-hashtag',
+                users: 1,
+                unread: 0
+            };
+            
+            sampleRooms.unshift(newRoom);
+            renderRooms();
+            showNotification(`Room "${roomName}" created successfully!`);
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            sendBtn.addEventListener('click', sendMessage);
+            
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                } else {
+                    handleTyping();
+                }
+            });
+            
+            messageInput.addEventListener('input', handleTyping);
+            
+            createRoomBtn.addEventListener('click', createRoom);
+            
+            // Simulate receiving messages periodically
+            setInterval(() => {
+                if (currentRoomId && isConnected && Math.random() > 0.7) {
+                    const users = ['Alex', 'Taylor', 'Jordan', 'Morgan', 'Casey', 'Riley'];
+                    const sender = users[Math.floor(Math.random() * users.length)];
+                    
+                    if (sender !== currentUser) {
+                        const message = {
+                            sender: sender,
+                            content: getRandomMessage(),
+                            timestamp: new Date(),
+                            type: 'text'
+                        };
+                        
+                        addMessageToUI(message);
+                        showNotification(`New message from ${sender}`);
+                    }
+                }
+            }, 8000);
+        }
+
+        // Initialize the app when the page loads
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
