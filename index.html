@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuantumChat - Real-time Chat System</title>
+    <title>SecureChat - Encrypted Messaging</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
-        /* CSS styles from previous implementation */
         * {
             margin: 0;
             padding: 0;
@@ -23,27 +23,28 @@
             --dark: #1d3557;
             --light: #f8f9fa;
             --gray: #6c757d;
-            --chat-bg: #121212;
-            --sidebar-bg: #1e1e1e;
-            --message-bg: #2d2d2d;
-            --message-own: #3a3a5a;
+            --chat-bg: #0f172a;
+            --sidebar-bg: #1e293b;
+            --message-bg: #334155;
+            --message-own: #4f46e5;
+            --header-bg: #0f172a;
         }
 
         body {
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            background: linear-gradient(135deg, #0f172a, #1e293b);
             color: var(--light);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 10px;
         }
 
         .container {
             width: 100%;
-            max-width: 1400px;
+            max-width: 1600px;
             height: 95vh;
-            background: rgba(30, 30, 46, 0.9);
+            background: var(--chat-bg);
             border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
@@ -52,8 +53,8 @@
         }
 
         header {
-            background: rgba(10, 10, 20, 0.95);
-            padding: 15px 30px;
+            background: var(--header-bg);
+            padding: 15px 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -205,6 +206,7 @@
             display: flex;
             align-items: center;
             gap: 15px;
+            position: relative;
         }
 
         .room-item:hover {
@@ -234,6 +236,14 @@
         .room-info h4 {
             font-size: 1rem;
             margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .room-info h4 i {
+            font-size: 0.8rem;
+            color: var(--success);
         }
 
         .room-info p {
@@ -276,7 +286,7 @@
 
         .chat-header {
             padding: 15px 25px;
-            background: rgba(10, 10, 20, 0.8);
+            background: var(--header-bg);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -395,6 +405,12 @@
             line-height: 1.5;
         }
 
+        .message-content.encrypted {
+            font-family: monospace;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
         .message-content img {
             max-width: 100%;
             border-radius: 10px;
@@ -431,7 +447,7 @@
 
         .input-area {
             padding: 20px;
-            background: rgba(10, 10, 20, 0.8);
+            background: var(--header-bg);
             display: flex;
             gap: 15px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -557,9 +573,37 @@
             30% { transform: translateY(-5px); }
         }
 
-        @media (max-width: 992px) {
+        .security-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: var(--success);
+            margin-top: 5px;
+        }
+
+        .security-info i {
+            font-size: 1.1rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
             .sidebar {
                 width: 280px;
+            }
+            
+            .message {
+                max-width: 80%;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 250px;
+            }
+            
+            .message {
+                max-width: 85%;
             }
         }
 
@@ -584,6 +628,73 @@
                 min-width: 250px;
                 margin-right: 15px;
             }
+            
+            .message {
+                max-width: 90%;
+            }
+        }
+
+        @media (max-width: 576px) {
+            header {
+                padding: 10px 15px;
+            }
+            
+            .logo h1 {
+                font-size: 1.4rem;
+            }
+            
+            .logo i {
+                font-size: 1.6rem;
+            }
+            
+            .sidebar {
+                height: 35%;
+            }
+            
+            .chat-header {
+                padding: 10px 15px;
+            }
+            
+            .chat-header-info h2 {
+                font-size: 1.2rem;
+            }
+            
+            .input-area {
+                padding: 15px;
+            }
+            
+            .input-box {
+                padding: 5px 15px;
+            }
+            
+            .input-box input {
+                padding: 10px 0;
+                font-size: 0.9rem;
+            }
+            
+            .input-action, .send-btn {
+                width: 40px;
+                height: 40px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .room-item {
+                min-width: 220px;
+            }
+            
+            .message {
+                max-width: 95%;
+                padding: 12px;
+            }
+            
+            .message-header {
+                margin-bottom: 5px;
+            }
+            
+            .message-content {
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
@@ -591,8 +702,8 @@
     <div class="container">
         <header>
             <div class="logo">
-                <i class="fas fa-satellite-dish"></i>
-                <h1>QuantumChat</h1>
+                <i class="fas fa-lock"></i>
+                <h1>SecureChat</h1>
             </div>
             <div class="connection-status">
                 <div class="status-indicator" id="statusIndicator"></div>
@@ -618,7 +729,7 @@
                 
                 <div class="rooms-section">
                     <div class="section-title">
-                        <h3>Active Rooms</h3>
+                        <h3>Secure Rooms</h3>
                         <button class="btn" id="createRoomBtn">
                             <i class="fas fa-plus"></i> New Room
                         </button>
@@ -638,17 +749,21 @@
                         </div>
                         <div>
                             <h2 id="roomName">Select a room</h2>
-                            <p id="roomDescription">Join a room to start chatting</p>
+                            <p id="roomDescription">Join a secure room to start chatting</p>
+                            <div class="security-info" id="securityInfo">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>End-to-end encrypted</span>
+                            </div>
                         </div>
                     </div>
                     <div class="chat-actions">
-                        <div class="action-btn">
+                        <div class="action-btn" id="encryptionBtn" title="Encryption Settings">
+                            <i class="fas fa-key"></i>
+                        </div>
+                        <div class="action-btn" title="Room Members">
                             <i class="fas fa-user-friends"></i>
                         </div>
-                        <div class="action-btn">
-                            <i class="fas fa-bell"></i>
-                        </div>
-                        <div class="action-btn">
+                        <div class="action-btn" title="Settings">
                             <i class="fas fa-cog"></i>
                         </div>
                     </div>
@@ -669,16 +784,16 @@
                 
                 <div class="input-area">
                     <div class="input-box">
-                        <input type="text" id="messageInput" placeholder="Type a message...">
+                        <input type="text" id="messageInput" placeholder="Type a secure message...">
                     </div>
                     <div class="input-actions">
-                        <div class="input-action">
+                        <div class="input-action" title="Attach File">
                             <i class="fas fa-paperclip"></i>
                         </div>
-                        <div class="input-action">
+                        <div class="input-action" title="Send Image">
                             <i class="fas fa-image"></i>
                         </div>
-                        <div class="input-action">
+                        <div class="input-action" title="Emoji">
                             <i class="fas fa-smile"></i>
                         </div>
                     </div>
@@ -704,6 +819,7 @@
         const roomIcon = document.getElementById('roomIcon');
         const roomName = document.getElementById('roomName');
         const roomDescription = document.getElementById('roomDescription');
+        const securityInfo = document.getElementById('securityInfo');
         const messagesContainer = document.getElementById('messagesContainer');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
@@ -711,6 +827,7 @@
         const typingIndicator = document.getElementById('typingIndicator');
         const typingText = document.getElementById('typingText');
         const createRoomBtn = document.getElementById('createRoomBtn');
+        const encryptionBtn = document.getElementById('encryptionBtn');
 
         // State variables
         let currentUser = 'User' + Math.floor(Math.random() * 1000);
@@ -718,8 +835,10 @@
         let isConnected = false;
         let typingTimeout = null;
         let isTyping = false;
+        let encryptionKey = null;
+        let rooms = [];
 
-        // Sample rooms data
+        // Sample rooms data with encryption status
         const sampleRooms = [
             { 
                 id: 'general', 
@@ -727,7 +846,8 @@
                 description: 'Talk about anything and everything', 
                 icon: 'fas fa-comments',
                 users: 24,
-                unread: 0
+                unread: 0,
+                encrypted: true
             },
             { 
                 id: 'tech', 
@@ -735,7 +855,8 @@
                 description: 'Discuss the latest tech trends', 
                 icon: 'fas fa-laptop-code',
                 users: 18,
-                unread: 3
+                unread: 3,
+                encrypted: true
             },
             { 
                 id: 'gaming', 
@@ -743,7 +864,8 @@
                 description: 'Share your gaming experiences', 
                 icon: 'fas fa-gamepad',
                 users: 32,
-                unread: 0
+                unread: 0,
+                encrypted: true
             },
             { 
                 id: 'music', 
@@ -751,7 +873,8 @@
                 description: 'Discuss your favorite artists and songs', 
                 icon: 'fas fa-music',
                 users: 15,
-                unread: 7
+                unread: 7,
+                encrypted: true
             },
             { 
                 id: 'sports', 
@@ -759,7 +882,8 @@
                 description: 'All about sports and athletes', 
                 icon: 'fas fa-football-ball',
                 users: 21,
-                unread: 0
+                unread: 0,
+                encrypted: true
             }
         ];
 
@@ -768,6 +892,9 @@
             // Set user info
             userName.textContent = currentUser;
             userAvatar.textContent = currentUser.charAt(0);
+            
+            // Initialize rooms
+            rooms = [...sampleRooms];
             
             // Render rooms
             renderRooms();
@@ -779,7 +906,7 @@
             setupEventListeners();
             
             // Show welcome notification
-            showNotification(`Welcome to QuantumChat, ${currentUser}!`);
+            showNotification(`Welcome to SecureChat, ${currentUser}!`);
         }
 
         // Simulate connection
@@ -792,7 +919,7 @@
                 isConnected = true;
                 statusText.textContent = 'Connected';
                 statusIndicator.classList.add('connected');
-                showNotification('Successfully connected to QuantumChat network');
+                showNotification('Successfully connected to SecureChat network');
             }, 1500);
         }
 
@@ -800,7 +927,7 @@
         function renderRooms() {
             roomList.innerHTML = '';
             
-            sampleRooms.forEach(room => {
+            rooms.forEach(room => {
                 const roomElement = document.createElement('div');
                 roomElement.className = `room-item ${currentRoomId === room.id ? 'active' : ''}`;
                 roomElement.innerHTML = `
@@ -808,7 +935,7 @@
                         <i class="${room.icon}"></i>
                     </div>
                     <div class="room-info">
-                        <h4>${room.name}</h4>
+                        <h4>${room.name} ${room.encrypted ? '<i class="fas fa-lock"></i>' : ''}</h4>
                         <p>${room.description}</p>
                     </div>
                     <div class="room-stats">
@@ -834,6 +961,24 @@
             roomDescription.textContent = room.description;
             roomIcon.innerHTML = `<i class="${room.icon}"></i>`;
             
+            // Update security info
+            if (room.encrypted) {
+                securityInfo.innerHTML = '<i class="fas fa-shield-alt"></i> End-to-end encrypted';
+                securityInfo.style.color = 'var(--success)';
+            } else {
+                securityInfo.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Not encrypted';
+                securityInfo.style.color = 'var(--warning)';
+            }
+            
+            // Generate encryption key for the room
+            if (room.encrypted) {
+                encryptionKey = CryptoJS.SHA256(room.id + currentUser).toString();
+                showNotification(`Joined encrypted room: ${room.name}`);
+            } else {
+                encryptionKey = null;
+                showNotification(`Joined room: ${room.name}`);
+            }
+            
             // Clear messages and show loading
             messagesContainer.innerHTML = '<div style="text-align:center; padding:20px; color:var(--gray);">Loading messages...</div>';
             
@@ -843,7 +988,6 @@
             }, 800);
             
             renderRooms();
-            showNotification(`Joined room: ${room.name}`);
         }
 
         // Render messages for the current room
@@ -856,6 +1000,17 @@
             const messages = generateSampleMessages();
             
             messages.forEach(msg => {
+                // Decrypt message if needed
+                let content = msg.content;
+                if (msg.encrypted && encryptionKey) {
+                    try {
+                        const bytes = CryptoJS.AES.decrypt(msg.content, encryptionKey);
+                        content = bytes.toString(CryptoJS.enc.Utf8);
+                    } catch (e) {
+                        content = '[Decryption failed]';
+                    }
+                }
+                
                 const messageElement = document.createElement('div');
                 messageElement.className = `message ${msg.sender === currentUser ? 'own' : 'other'}`;
                 messageElement.innerHTML = `
@@ -864,7 +1019,7 @@
                         <div class="message-sender">${msg.sender}</div>
                         <div class="message-time">${formatTime(msg.timestamp)}</div>
                     </div>
-                    <div class="message-content">
+                    <div class="message-content ${msg.encrypted ? 'encrypted' : ''}">
                         ${msg.type === 'file' ? `
                             <div class="file">
                                 <i class="fas fa-file-pdf"></i>
@@ -877,7 +1032,7 @@
                         ` : msg.type === 'image' ? `
                             <img src="${msg.imageUrl}" alt="Shared image">
                         ` : `
-                            ${msg.content}
+                            ${content}
                         `}
                     </div>
                 `;
@@ -906,6 +1061,7 @@
                 let fileName = '';
                 let fileSize = '';
                 let imageUrl = '';
+                let encrypted = true;
                 
                 if (rand < 0.1) {
                     type = 'file';
@@ -916,6 +1072,12 @@
                     imageUrl = `https://picsum.photos/seed/${i}/400/300`;
                 } else {
                     content = getRandomMessage();
+                    // Encrypt the message if we have an encryption key
+                    if (encryptionKey) {
+                        content = CryptoJS.AES.encrypt(content, encryptionKey).toString();
+                    } else {
+                        encrypted = false;
+                    }
                 }
                 
                 messages.push({
@@ -925,7 +1087,8 @@
                     type,
                     fileName,
                     fileSize,
-                    imageUrl
+                    imageUrl,
+                    encrypted
                 });
             }
             
@@ -936,7 +1099,7 @@
         function getRandomMessage() {
             const messages = [
                 "Hello everyone! How's it going?",
-                "Has anyone tried the new QuantumChat features?",
+                "Has anyone tried the new SecureChat features?",
                 "I'm really enjoying this platform!",
                 "Does anyone know when the next update is coming?",
                 "Just joined the room - what's everyone talking about?",
@@ -952,7 +1115,7 @@
                 "Thanks for all the help everyone!",
                 "This room is always so active!",
                 "I just discovered this platform today - it's amazing!",
-                "What's your favorite feature of QuantumChat?",
+                "What's your favorite feature of SecureChat?",
                 "I'm thinking about starting my own room",
                 "Anyone interested in a gaming session later?"
             ];
@@ -965,26 +1128,39 @@
             const content = messageInput.value.trim();
             if (!content || !currentRoomId || !isConnected) return;
             
+            // Encrypt message if we have an encryption key
+            let encryptedContent = content;
+            let isEncrypted = false;
+            
+            if (encryptionKey) {
+                encryptedContent = CryptoJS.AES.encrypt(content, encryptionKey).toString();
+                isEncrypted = true;
+            }
+            
             // Create message object
             const message = {
                 sender: currentUser,
-                content: content,
+                content: encryptedContent,
                 timestamp: new Date(),
-                type: 'text'
+                type: 'text',
+                encrypted: isEncrypted
             };
             
             // Add to UI immediately
-            addMessageToUI(message);
+            addMessageToUI(message, content);
             
             // Clear input
             messageInput.value = '';
             
             // Simulate sending to server
-            showNotification('Message sent');
+            showNotification('Message sent securely');
         }
 
         // Add message to UI
-        function addMessageToUI(message) {
+        function addMessageToUI(message, decryptedContent = null) {
+            // If we have the decrypted content, use it for display
+            const displayContent = decryptedContent !== null ? decryptedContent : message.content;
+            
             const messageElement = document.createElement('div');
             messageElement.className = `message ${message.sender === currentUser ? 'own' : 'other'}`;
             messageElement.innerHTML = `
@@ -993,8 +1169,8 @@
                     <div class="message-sender">${message.sender}</div>
                     <div class="message-time">${formatTime(message.timestamp)}</div>
                 </div>
-                <div class="message-content">
-                    ${message.content}
+                <div class="message-content ${message.encrypted ? 'encrypted' : ''}">
+                    ${displayContent}
                 </div>
             `;
             messagesContainer.appendChild(messageElement);
@@ -1047,18 +1223,34 @@
             const roomName = prompt('Enter room name:');
             if (!roomName) return;
             
+            const encrypted = confirm('Make this room end-to-end encrypted?');
+            
             const newRoom = {
                 id: roomName.toLowerCase().replace(/\s+/g, '-'),
                 name: roomName,
-                description: 'A new chat room',
+                description: 'A new secure chat room',
                 icon: 'fas fa-hashtag',
                 users: 1,
-                unread: 0
+                unread: 0,
+                encrypted: encrypted
             };
             
-            sampleRooms.unshift(newRoom);
+            rooms.unshift(newRoom);
             renderRooms();
             showNotification(`Room "${roomName}" created successfully!`);
+        }
+
+        // Toggle encryption settings
+        function toggleEncryption() {
+            if (!currentRoomId) {
+                showNotification('Please join a room first');
+                return;
+            }
+            
+            const currentRoom = rooms.find(r => r.id === currentRoomId);
+            if (currentRoom) {
+                alert(`Encryption Status: ${currentRoom.encrypted ? 'ON' : 'OFF'}\nAlgorithm: AES-256`);
+            }
         }
 
         // Setup event listeners
@@ -1077,6 +1269,8 @@
             
             createRoomBtn.addEventListener('click', createRoom);
             
+            encryptionBtn.addEventListener('click', toggleEncryption);
+            
             // Simulate receiving messages periodically
             setInterval(() => {
                 if (currentRoomId && isConnected && Math.random() > 0.7) {
@@ -1084,14 +1278,36 @@
                     const sender = users[Math.floor(Math.random() * users.length)];
                     
                     if (sender !== currentUser) {
+                        let content = getRandomMessage();
+                        let isEncrypted = false;
+                        
+                        // Encrypt message if room is encrypted
+                        const currentRoom = rooms.find(r => r.id === currentRoomId);
+                        if (currentRoom && currentRoom.encrypted && encryptionKey) {
+                            content = CryptoJS.AES.encrypt(content, encryptionKey).toString();
+                            isEncrypted = true;
+                        }
+                        
                         const message = {
                             sender: sender,
-                            content: getRandomMessage(),
+                            content: content,
                             timestamp: new Date(),
-                            type: 'text'
+                            type: 'text',
+                            encrypted: isEncrypted
                         };
                         
-                        addMessageToUI(message);
+                        // Decrypt for display
+                        let displayContent = message.content;
+                        if (isEncrypted && encryptionKey) {
+                            try {
+                                const bytes = CryptoJS.AES.decrypt(message.content, encryptionKey);
+                                displayContent = bytes.toString(CryptoJS.enc.Utf8);
+                            } catch (e) {
+                                displayContent = '[Decryption failed]';
+                            }
+                        }
+                        
+                        addMessageToUI(message, displayContent);
                         showNotification(`New message from ${sender}`);
                     }
                 }
